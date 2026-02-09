@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from database import engine, Base
-from routers import todo
+from routers import todos, auth
 
 app = FastAPI(
     title="Todo CRUD (HTML + JSON)",
@@ -15,4 +15,5 @@ templates = Jinja2Templates(directory="templates")
 
 Base.metadata.create_all(bind=engine)
 
-app.include_router(todo.router)
+app.include_router(auth.router)
+app.include_router(todos.router)

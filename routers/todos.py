@@ -1,25 +1,15 @@
-from datetime import datetime
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-
-from database import SessionLocal, engine, Base
+from database import get_db
 from models import Todo
-from schemas import TodoCreate, TodoUpdate, TodoOut
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        
+
         
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
@@ -31,7 +21,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/", response_class=HTMLResponse)
 async def create_task(content: str = Form(...), db: Session = Depends(get_db)):
-    todo = Todo(content=content, date_created=datetime.utcnow())
+    todo = Todo(content=content, date_created=datetime.now(timezone.utc))
     db.add(todo)
     db.commit()
     return RedirectResponse(url="/", status_code=303)
