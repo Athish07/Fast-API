@@ -16,7 +16,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/token")   # <-- FIXED
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/token") 
 
 
 class CreateUserRequest(BaseModel):
@@ -44,44 +44,26 @@ def authenticate_user(username: str, password: str, db: Session) -> Users | None
     return user
 
 
-def generate_jwt_token(username: str, user_id: int, expires_delta: timedelta) -> str:
-    payload = {'sub': username, 'id': user_id}
+def generate_jwt_token(email: str, user_id: int, expires_delta: timedelta) -> str:
+    payload = {'sub': email, 'id': user_id}
     expires = datetime.now(timezone.utc) + expires_delta
     payload['exp'] = expires
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-
-@router.post("/token", response_model=TokenResponse)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
-):
-    user = authenticate_user(form_data.username, form_data.password, db)
-    if not user:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-
-    expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    token = generate_jwt_token(user.email, user.id, expires_delta)
-
-    return TokenResponse(
-        access_token=token,
-        token_type="bearer",
-        expires_in=int(expires_delta.total_seconds())
-    )
-
 async def get_current_user(token: str = Depends(oauth2_bearer)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        email: str = payload.get("email")
         user_id: int = payload.get("id")
 
-        if username is None or user_id is None:
+        if email is None or user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
 
         return payload 
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
+        
 @router.post("/auth", status_code=status.HTTP_201_CREATED)
 async def create_user(user_request: CreateUserRequest,
                       db: Session = Depends(get_db)):

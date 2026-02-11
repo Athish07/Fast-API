@@ -7,12 +7,13 @@ class Users(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key= True, index = True)
-    email = Column(String, unique= True)
-    first_name = Column(String)
-    last_name = Column(String)
-    hashed_password = Column(String, nullable= True)
+    email = Column(String(320), unique=True, nullable=False, index=True)
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    hashed_password = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    role = Column(String)
+    role = Column(String(50), nullable=True)
+
     
 class Todo(Base):
     __tablename__ = "todos"
